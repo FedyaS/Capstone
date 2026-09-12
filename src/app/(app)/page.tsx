@@ -1,7 +1,15 @@
 import Link from 'next/link';
 
+import { LiveDot, timeAgo } from '@/components/InsightsBoard';
 import { Timeline } from '@/components/Timeline';
-import { loadArticles, loadProblemStatement, loadTimeline, loadTopics } from '@/lib/data';
+import {
+  loadArticles,
+  loadInsights,
+  loadProblemStatement,
+  loadTimeline,
+  loadTopics,
+} from '@/lib/data';
+import type { InsightsDoc } from '@/lib/insights';
 import { ARTICLE_STATUS_META, TOPIC_STATUS_META, type Article } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -28,6 +36,56 @@ function Stat({
   );
 }
 
+function BriefingTeaser({ doc }: { doc: InsightsDoc }) {
+  const takeaways = doc.blocks
+    .flatMap((block) => (block.type === 'takeaways' ? block.items : []))
+    .slice(0, 3);
+  const ago = timeAgo(doc.updatedAt);
+
+  return (
+    <Link
+      href="/insights"
+      className="card group relative block overflow-hidden p-5 transition hover:border-slate-700 sm:p-6"
+    >
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-cyan-500/15 blur-3xl"
+      />
+      <div className="relative">
+        <div className="flex items-center justify-between gap-3 font-mono text-[10px] uppercase tracking-[0.16em]">
+          <span className="flex items-center gap-2 text-cyan-300">
+            <LiveDot /> AI briefing
+          </span>
+          <span className="text-slate-500 transition group-hover:text-cyan-300">
+            {ago ? `Updated ${ago}` : 'Open'} →
+          </span>
+        </div>
+        {doc.headline ? (
+          <>
+            <p className="mt-3 font-serif text-xl font-semibold leading-snug text-slate-100">
+              {doc.headline}
+            </p>
+            {takeaways.length > 0 && (
+              <ul className="mt-3 space-y-1.5">
+                {takeaways.map((item) => (
+                  <li key={item.title} className="flex items-start gap-2.5 text-sm text-slate-400">
+                    <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-cyan-400" />
+                    {item.title}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
+        ) : (
+          <p className="mt-3 text-sm italic text-slate-500">
+            No briefing yet — ask Cursor to refresh the insights board.
+          </p>
+        )}
+      </div>
+    </Link>
+  );
+}
+
 function hostOf(url: string): string {
   try {
     return new URL(url).hostname.replace(/^www\./, '');
@@ -37,11 +95,12 @@ function hostOf(url: string): string {
 }
 
 export default async function DashboardPage() {
-  const [phases, articles, topics, problem] = await Promise.all([
+  const [phases, articles, topics, problem, { doc: insights }] = await Promise.all([
     loadTimeline(),
     loadArticles(),
     loadTopics(),
     loadProblemStatement(),
+    loadInsights(),
   ]);
 
   const understoodArticles = articles.filter((a) => a.status === 'UNDERSTOOD').length;
@@ -105,6 +164,8 @@ export default async function DashboardPage() {
           href="/problem"
         />
       </div>
+
+      <BriefingTeaser doc={insights} />
 
       <Timeline initialPhases={phases} />
 

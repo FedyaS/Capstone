@@ -254,6 +254,30 @@
   margin-right: 0.4rem;
 }
 
+/* Compact variant for short AI-written snippets inside Insights cards. */
+.md-body.md-compact {
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #94a3b8;
+}
+.md-body.md-bright {
+  color: #cbd5e1;
+  font-size: 0.9375rem;
+}
+.md-compact p,
+.md-compact ul,
+.md-compact ol {
+  margin-bottom: 0.55rem;
+}
+.md-compact li {
+  margin: 0.15rem 0;
+}
+.md-compact strong {
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
 /* KaTeX: let long display equations scroll instead of blowing out the layout. */
 .md-body .katex {
   font-size: 1.05em;

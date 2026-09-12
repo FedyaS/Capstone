@@ -121,6 +121,8 @@ export const PATHS = {
   articles: 'data/articles.json',
   topics: 'data/topics.json',
   timeline: 'data/timeline.json',
+  /** AI-managed — edited by Cursor, never by the app. See .cursor/rules/ai-insights.mdc */
+  insights: 'data/insights.json',
 } as const;
 
 export const DEFAULT_PHASES: Phase[] = [

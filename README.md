@@ -9,10 +9,33 @@ through the GitHub API. No Postgres, no Supabase, no ORM.
 | Route         | File it edits              | What it does                                                  |
 | ------------- | -------------------------- | ------------------------------------------------------------- |
 | `/`           | `data/timeline.json`       | Lifecycle tracker; tap a phase to advance it, plus live stats  |
+| `/insights`   | `data/insights.json`       | **AI-managed** visual briefing, read-only in the app (below)   |
 | `/problem`    | `data/problem_statement.md`| Markdown + LaTeX editor with preview and **Export context**    |
 | `/articles`   | `data/articles.json`       | Source manager: URL, status, usefulness 0–10, tags, notes      |
 | `/topics`     | `data/topics.json`         | Knowledge gaps: understand / learning / don't understand       |
 | `/scratchpad` | `data/ai_notes.md`         | One-button clipboard dump for AI output                        |
+
+## AI Insights board
+
+`/insights` is owned by your AI assistant. It reads your articles, topics, scratchpad and
+problem statement (plus web research when you ask) and writes the key points into
+`data/insights.json`. The page then renders them as stat tiles, takeaway cards, process
+pipelines, comparison tables, timelines, bar charts, glossaries, callouts and next steps.
+
+- **Instructions for Cursor:** `.cursor/rules/ai-insights.mdc` (workflow, writing rules, every
+  block type with examples). Cursor loads it automatically when the task is about insights, or
+  you can attach it with `@ai-insights`.
+- **Editor validation:** `data/insights.schema.json` gives autocomplete and error squiggles.
+- **Check:** `npm run insights:check` validates the file with the same parser the app uses.
+  Invalid blocks are skipped and listed in a warning panel on the page, so they never crash it.
+
+Example prompts in Cursor:
+
+> Refresh the insights board from my latest scratchpad entries and articles.
+>
+> Research semi-global matching and add what matters to the insights board, citing URLs.
+>
+> Mark the next steps I've finished as done and prune anything stale from insights.
 
 ## Security model
 
@@ -124,4 +147,5 @@ git pull
 npm run build      # production build
 npm run start      # serve the production build
 npm run typecheck  # tsc --noEmit
+npm run insights:check  # validate data/insights.json
 ```

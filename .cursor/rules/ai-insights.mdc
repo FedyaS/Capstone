@@ -1,0 +1,161 @@
+---
+description: How to maintain the AI-managed Insights board (data/insights.json, shown at /insights). Use whenever asked to refresh/update insights, distill articles, topics, the scratchpad or new research into the dashboard, or change how the Insights view looks.
+globs: data/insights.json,data/insights.schema.json,src/lib/insights.ts,src/components/InsightBlocks.tsx,src/components/InsightsBoard.tsx
+alwaysApply: false
+---
+
+# AI Insights board
+
+`/insights` is a visual research briefing that **you (the AI) own**. The app only reads it;
+it never writes it. Everything on the page comes from one file: **`data/insights.json`**.
+You change the page by editing that JSON — no React code needed for content changes.
+
+The user's capstone is about the topic in `data/problem_statement.md`. The board should tell
+them, at a glance: what matters most right now, how the ideas fit together, what to do next.
+
+## Workflow (follow in order)
+
+1. **Sync first.** Run `git pull`. The deployed app commits articles, topics and notes
+   straight to GitHub, so the local copy may be stale.
+2. **Read the inputs:**
+   - `data/problem_statement.md`: the research goal. Everything should connect back to it.
+   - `data/articles.json`: sources (`id`, `title`, `url`, `status`, `usefulness` 0-10, `notes`).
+   - `data/topics.json`: knowledge gaps (`status`: DONT_UNDERSTAND / LEARNING / UNDERSTAND).
+   - `data/ai_notes.md`: the scratchpad, newest entry at the top. Usually the richest input.
+   - Web research, only if the user asked for it. Cite it by URL.
+3. **Read the current `data/insights.json`** and decide what to *change*: add new findings,
+   update ones that have moved on, remove stale ones. Don't rewrite it from scratch unless asked.
+4. **Edit `data/insights.json`.** Keep block `id`s stable so anchors don't break.
+5. **Bump metadata:** set `updatedAt` to the current UTC time (ISO-8601), and **prepend** one
+   `changelog` entry `{ "date": <same time>, "note": "<what changed, ≤ 1 sentence>" }`.
+   Keep at most 10 entries.
+6. **Validate:** run `npm run insights:check`. It must print `✔`. Fix every reported problem.
+   The file also has a `$schema`, so the editor underlines mistakes.
+7. **Commit only if the user asks** (message: `insights: <what changed>`), then `git push`
+   so the deployed site shows it.
+
+## Writing rules
+
+- **Headline** = one sentence stating the single most important insight *as a claim*,
+  not a label. ✅ "Every stereo algorithm is the same four-stage pipeline". ❌ "Stereo vision overview".
+- **Summary** = 2-3 plain sentences: why the headline matters for *this* problem statement.
+- **Takeaways are claims, not topics.** Title ≤ 70 chars, body 1-3 sentences.
+- **Ground everything.** Each takeaway lists `sources`. Never invent papers, numbers, dates or
+  URLs. If something is your own inference, say so in the text and set `confidence` honestly
+  (≥ 90 = stated directly in a source, 60-89 = well-supported inference, < 60 = speculative).
+- **Tie it back to the problem statement.** Include at least one `callout` saying why it matters.
+- **Prefer structure over prose.** Use a process → `pipeline`, options → `compare`,
+  history → `timeline`, ranking → `bars`, jargon → `concepts`. Use `markdown` only as a last resort.
+- **Keep it tight.** Aim for 6-12 blocks. Prune rather than append forever.
+- Use `actions` for what the user should do next. Set `done: true` when the data shows it
+  happened (e.g. the article's status is now READ), rather than deleting the item.
+- No HTML in any field. Markdown (and `$LaTeX$`) only in `body` / `definition` fields.
+  Keep emoji out of the content, since the design already supplies icons.
+
+## Document shape
+
+```json
+{
+  "$schema": "./insights.schema.json",
+  "updatedAt": "2026-09-12T14:05:00Z",
+  "headline": "One-sentence key insight",
+  "summary": "2-3 sentences of context.",
+  "focus": ["Chip 1", "Chip 2"],
+  "blocks": [ /* see block reference, rendered top → bottom */ ],
+  "changelog": [ { "date": "2026-09-12T14:05:00Z", "note": "What changed" } ]
+}
+```
+
+Every block has: `id` (unique kebab-case, required), `type` (required), and optional `title`,
+`subtitle`, `span` (`"full"` default | `"half"`), `accent`.
+
+**Layout:** blocks fill a 2-column grid on desktop (1 column on mobile). `"span": "full"` takes
+the whole row. Put **two** `"half"` blocks next to each other; a lone half block leaves a gap.
+Good half candidates: `timeline`, `bars`, `actions`, `sources`, `callout`, short `concepts`.
+
+**Accents** (colour of dot, glow, bars): `cyan` default/brand · `emerald` confirmed/solid ·
+`amber` needs attention · `purple` comparisons/ideas · `sky` reference/definitions ·
+`rose` risks/problems · `slate` neutral. Vary accents between neighbouring blocks.
+
+**Source refs** (`sources[]`, `ref`): an article `id` from `articles.json`, a topic `id` from
+`topics.json`, a full `https://` URL (for your own web research), `"scratchpad"` or `"problem"`.
+They render as clickable chips. Unknown refs are flagged by the checker.
+
+## Block reference
+
+| type | use it for | required fields |
+|---|---|---|
+| `stats` | 2-4 headline numbers (no card title needed) | `items[{value, label, hint?, accent?}]` |
+| `takeaways` | the key insights (the heart of the board) | `items[{title, body, importance, confidence?, sources?, tags?}]` |
+| `pipeline` | an ordered process / method (2-6 steps) | `steps[{label, detail?}]` |
+| `compare` | options side by side | `columns[2-4]`, `rows[{label, values[one per column]}]`, `highlight?` (column index) |
+| `timeline` | history, milestones, a schedule (oldest first) | `events[{date, title, detail?}]` |
+| `bars` | ranking / priority / coverage, one number per row | `items[{label, value, note?}]`, `max?`, `unit?` |
+| `concepts` | glossary of terms the user must know | `items[{term, definition}]` |
+| `callout` | one message that must stand out | `body`, `tone` (insight/info/success/warning/danger) |
+| `actions` | next steps, open questions, risks | `items[{text, kind: todo/question/risk, priority, detail?, done?}]` |
+| `sources` | spotlight the most useful sources | `items[{ref, takeaway, relevance? 0-10}]` |
+| `markdown` | anything else (last resort) | `body` |
+
+`importance` / `priority` are `"high" | "medium" | "low"`.
+
+### Examples of each block
+
+```json
+{ "id": "at-a-glance", "type": "stats", "items": [
+  { "value": "4", "label": "Pipeline stages", "hint": "cost → aggregate → optimise → refine", "accent": "cyan" },
+  { "value": "92%", "label": "Best accuracy seen", "hint": "Paper X, Middlebury", "accent": "emerald" } ] }
+
+{ "id": "key-takeaways", "type": "takeaways", "title": "Key takeaways", "items": [
+  { "title": "Claim in under 70 chars", "body": "Why it's true and why it matters. **Bold** ok.",
+    "importance": "high", "confidence": 90, "sources": ["<article-id>", "scratchpad"], "tags": ["method"] } ] }
+
+{ "id": "method", "type": "pipeline", "title": "How X works", "steps": [
+  { "label": "Step one", "detail": "One sentence." }, { "label": "Step two", "detail": "One sentence." } ] }
+
+{ "id": "a-vs-b", "type": "compare", "title": "A vs B", "columns": ["A", "B"], "highlight": 0, "rows": [
+  { "label": "Speed", "values": ["Fast", "Slow"] } ] }
+
+{ "id": "history", "type": "timeline", "title": "Milestones", "span": "half", "events": [
+  { "date": "2002", "title": "What happened", "detail": "Optional sentence." } ] }
+
+{ "id": "priority", "type": "bars", "title": "What to study next", "span": "half", "max": 10, "items": [
+  { "label": "Topic A", "value": 9, "note": "Optional" }, { "label": "Topic B", "value": 5 } ] }
+
+{ "id": "glossary", "type": "concepts", "title": "Concepts to know", "items": [
+  { "term": "Disparity", "definition": "Pixel shift between views; depth $Z = fB/d$." } ] }
+
+{ "id": "why-it-matters", "type": "callout", "tone": "insight", "title": "Why this matters",
+  "body": "Markdown message tied to the problem statement." }
+
+{ "id": "next-steps", "type": "actions", "title": "Next steps", "items": [
+  { "text": "Do this", "kind": "todo", "priority": "high", "done": false },
+  { "text": "Is this true?", "detail": "Context", "kind": "question", "priority": "medium" } ] }
+
+{ "id": "source-spotlight", "type": "sources", "title": "Source spotlight", "items": [
+  { "ref": "<article-id or https://…>", "takeaway": "One line on why it's useful.", "relevance": 9 } ] }
+```
+
+### Recommended order
+
+`stats` → `takeaways` → `pipeline`/`compare` (how it fits together) → `callout` (why it matters)
+→ paired halves (`timeline` + `bars`, or `actions` + `sources`) → `concepts` → `actions` → `sources`.
+
+## Changing the view itself (code)
+
+Only when the user asks for a new kind of visual or a design change:
+
+- New block type: add it in **all four** places, then run `npm run insights:check` and `npm run typecheck`:
+  1. `src/lib/insights.ts`: add to `BLOCK_TYPES`, add to the `Block` union, add a `case` in `parseInsights`.
+  2. `data/insights.schema.json`: add to the `type` enum, add an `if/then` entry under `definitions.block.allOf`.
+  3. `src/components/InsightBlocks.tsx`: write a renderer and add it to the `InsightBlock` switch.
+  4. This rule file: add a row to the block reference plus an example.
+- `src/lib/insights.ts` must stay dependency-free with erasable TS only (no enums/namespaces),
+  because the checker runs it with Node type stripping.
+- Tailwind classes must be complete literal strings (use the `ACCENT` map pattern). Never build
+  class names like `` `text-${color}-300` ``, because they get purged.
+- Page layout, hero, jump rail and update log live in `src/components/InsightsBoard.tsx`; the route is
+  `src/app/(app)/insights/page.tsx`; the dashboard teaser is `BriefingTeaser` in `src/app/(app)/page.tsx`.
+- Match the existing look: dark slate, cyan phosphor accent, serif headings (`font-serif`),
+  mono uppercase micro-labels, `.card` surfaces.
+- Preview with `npm run dev` → http://localhost:3000/insights.

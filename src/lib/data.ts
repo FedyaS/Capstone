@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { parseInsights, type KnownRefs, type ParseResult } from '@/lib/insights';
 import { readFile } from '@/lib/storage';
 import {
   ARTICLE_STATUSES,
@@ -125,4 +126,20 @@ export async function loadProblemStatement(): Promise<string> {
 export async function loadNotes(): Promise<string> {
   const file = await readFile(PATHS.notes);
   return file?.content ?? '';
+}
+
+/**
+ * The AI-managed board. Unlike the loaders above, broken JSON is surfaced as an
+ * issue rather than swallowed, because the whole point is to tell the AI (and
+ * you) exactly what to fix.
+ */
+export async function loadInsights(known?: KnownRefs): Promise<ParseResult> {
+  const file = await readFile(PATHS.insights);
+  if (!file || !file.content.trim()) return parseInsights(null);
+  try {
+    return parseInsights(JSON.parse(file.content), known);
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    return { ...parseInsights(null), issues: [`${PATHS.insights} is not valid JSON: ${reason}`] };
+  }
 }

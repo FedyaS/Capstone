@@ -27,11 +27,16 @@ const config: Config = {
           '0%': { transform: 'translateY(100%)' },
           '100%': { transform: 'translateY(0)' },
         },
+        'grow-x': {
+          '0%': { transform: 'scaleX(0)' },
+          '100%': { transform: 'scaleX(1)' },
+        },
       },
       animation: {
         'fade-up': 'fade-up 200ms ease-out both',
         shake: 'shake 380ms ease-in-out',
         'sheet-up': 'sheet-up 240ms cubic-bezier(0.16, 1, 0.3, 1) both',
+        'grow-x': 'grow-x 800ms cubic-bezier(0.16, 1, 0.3, 1) 150ms both',
       },
     },
   },

@@ -88,8 +88,26 @@ function IconScratchpad({ className }: { className?: string }) {
   );
 }
 
+function IconInsights({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="M10 3.5l1.9 5.1 5.1 1.9-5.1 1.9L10 17.5l-1.9-5.1L3 10.5l5.1-1.9L10 3.5Z" />
+      <path d="M18 14.5l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9.9-2.1Z" />
+    </svg>
+  );
+}
+
 const NAV = [
   { href: '/', label: 'Dashboard', Icon: IconDashboard },
+  { href: '/insights', label: 'Insights', Icon: IconInsights },
   { href: '/problem', label: 'Problem', Icon: IconProblem },
   { href: '/articles', label: 'Articles', Icon: IconArticles },
   { href: '/topics', label: 'Topics', Icon: IconTopics },

@@ -1,0 +1,164 @@
+{
+  "$schema": "./insights.schema.json",
+  "updatedAt": "2026-09-12T00:17:00Z",
+  "headline": "Every stereo algorithm is the same four-stage pipeline — so compare stages, not whole systems.",
+  "summary": "Scharstein & Szeliski turned stereo matching from a zoo of incomparable methods into a measurable science: a shared 4-step taxonomy, a testbed to swap one step at a time, and ground-truth data to score the result. For a robotics stereo system, that gives you both a design vocabulary and an evaluation method.",
+  "focus": ["Stereo matching pipeline", "Middlebury evaluation", "Robotics depth sensing"],
+  "blocks": [
+    {
+      "id": "at-a-glance",
+      "type": "stats",
+      "items": [
+        { "value": "4", "label": "Pipeline stages", "hint": "cost → aggregate → optimise → refine", "accent": "cyan" },
+        { "value": "2002", "label": "Journal version", "hint": "expanded from a 2001 IEEE workshop paper", "accent": "purple" },
+        { "value": "3", "label": "Core contributions", "hint": "taxonomy · testbed · ground truth", "accent": "emerald" },
+        { "value": "~20 yrs", "label": "As the benchmark", "hint": "Middlebury shaped stereo research", "accent": "amber" }
+      ]
+    },
+    {
+      "id": "key-takeaways",
+      "type": "takeaways",
+      "title": "Key takeaways",
+      "subtitle": "What matters most from your sources so far",
+      "items": [
+        {
+          "title": "Dense stereo = four interchangeable stages",
+          "body": "Almost every two-frame algorithm can be decomposed into **matching cost**, **cost aggregation**, **disparity optimisation** and **refinement**. Describe any method you read in these four terms.",
+          "importance": "high",
+          "confidence": 95,
+          "sources": ["9e7d6ff6-e350-437d-ad4a-c2be40efbd9a", "scratchpad"],
+          "tags": ["taxonomy"]
+        },
+        {
+          "title": "Improve one stage, hold the rest fixed",
+          "body": "The paper's C++ testbed lets you swap a single stage (e.g. a new aggregation window) and measure the change in isolation — a clean experimental design you can copy for your own evaluation.",
+          "importance": "high",
+          "confidence": 90,
+          "sources": ["9e7d6ff6-e350-437d-ad4a-c2be40efbd9a"],
+          "tags": ["methodology"]
+        },
+        {
+          "title": "Ground truth made the field measurable",
+          "body": "Accurate ground-truth disparity maps plus a public leaderboard replaced subjective \"looks good\" comparisons with error rates — arguably the paper's most lasting legacy.",
+          "importance": "medium",
+          "confidence": 85,
+          "sources": ["scratchpad"],
+          "tags": ["evaluation"]
+        },
+        {
+          "title": "Local vs global is the core design fork",
+          "body": "Stage 3 is where methods split: pick the cheapest match per pixel (local), or solve for the whole disparity map at once (global — dynamic programming, graph cuts). This trade-off drives speed vs accuracy on a robot.",
+          "importance": "medium",
+          "confidence": 80,
+          "sources": ["scratchpad", "274d95b2-537b-4aec-9ab1-3f8bb1f619b2"],
+          "tags": ["design-choice"]
+        }
+      ]
+    },
+    {
+      "id": "stereo-pipeline",
+      "type": "pipeline",
+      "title": "The stereo matching pipeline",
+      "subtitle": "Scharstein & Szeliski's taxonomy — every dense method fits these steps",
+      "accent": "cyan",
+      "steps": [
+        { "label": "Matching cost", "detail": "Score how similar each left-image pixel is to candidate pixels in the right image." },
+        { "label": "Cost aggregation", "detail": "Sum or average costs over a local window to suppress noise and ambiguity." },
+        { "label": "Disparity optimisation", "detail": "Pick the best disparity per pixel — locally (winner-takes-all) or globally (DP, graph cuts)." },
+        { "label": "Refinement", "detail": "Fix errors, fill occluded regions, and interpolate to sub-pixel precision." }
+      ]
+    },
+    {
+      "id": "local-vs-global",
+      "type": "compare",
+      "title": "Local vs global disparity computation",
+      "subtitle": "The biggest design decision in stage 3",
+      "accent": "purple",
+      "columns": ["Local methods", "Global methods"],
+      "rows": [
+        { "label": "How it decides", "values": ["Lowest aggregated cost per pixel, independently", "Minimises one energy function over the whole image"] },
+        { "label": "Examples", "values": ["Window-based winner-takes-all", "Dynamic programming, graph cuts"] },
+        { "label": "Relies on", "values": ["Good cost aggregation (stage 2)", "A smoothness term between neighbouring pixels"] },
+        { "label": "Typical trade-off", "values": ["Fast and simple; struggles in textureless areas", "More accurate; heavier to compute"] }
+      ]
+    },
+    {
+      "id": "why-it-matters",
+      "type": "callout",
+      "tone": "insight",
+      "title": "Why this matters for your capstone",
+      "body": "Your problem is **stereo vision systems in robotics**. Use the four-stage taxonomy to describe whatever system you build, and borrow the paper's evaluation style: fix three stages, vary one, and report error against ground truth. That turns \"my depth map looks better\" into a defensible result."
+    },
+    {
+      "id": "history",
+      "type": "timeline",
+      "title": "How the benchmark came to be",
+      "span": "half",
+      "accent": "amber",
+      "events": [
+        { "date": "Pre-2001", "title": "No common yardstick", "detail": "Each paper used its own images and mostly qualitative results." },
+        { "date": "2001", "title": "IEEE workshop paper", "detail": "Taxonomy and evaluation framework first presented." },
+        { "date": "2002", "title": "Expanded journal version", "detail": "Becomes one of the most cited papers in computer vision." },
+        { "date": "2000s–2010s", "title": "Middlebury leaderboard", "detail": "Standard benchmark driving stereo, 3D reconstruction and depth estimation." }
+      ]
+    },
+    {
+      "id": "study-priority",
+      "type": "bars",
+      "title": "What to study next",
+      "subtitle": "AI-rated priority for your problem statement",
+      "span": "half",
+      "accent": "emerald",
+      "max": 10,
+      "items": [
+        { "label": "The four pipeline stages", "value": 9, "note": "Foundation for everything else" },
+        { "label": "Evaluation metrics & ground truth", "value": 8, "note": "How you will prove results" },
+        { "label": "Global optimisation (DP, graph cuts)", "value": 6 },
+        { "label": "Sub-pixel refinement", "value": 4 }
+      ]
+    },
+    {
+      "id": "glossary",
+      "type": "concepts",
+      "title": "Concepts to know",
+      "accent": "sky",
+      "items": [
+        { "term": "Disparity", "definition": "Horizontal pixel shift of the same point between left and right images. Larger disparity = closer object; for rectified cameras depth is $Z = fB/d$." },
+        { "term": "Matching cost", "definition": "A per-pixel similarity score between a left pixel and a candidate right pixel, e.g. absolute intensity difference." },
+        { "term": "Cost aggregation", "definition": "Combining matching costs over a neighbourhood so single-pixel noise doesn't decide the match." },
+        { "term": "Occlusion", "definition": "Regions visible to one camera but hidden from the other — they have no true match and must be filled in." },
+        { "term": "Sub-pixel refinement", "definition": "Interpolating between integer disparities to get smoother, more precise depth." },
+        { "term": "Ground truth", "definition": "Exact, independently measured disparity maps used to score an algorithm's error rate." }
+      ]
+    },
+    {
+      "id": "next-steps",
+      "type": "actions",
+      "title": "Next steps & open questions",
+      "accent": "cyan",
+      "items": [
+        { "text": "Read the taxonomy section of Scharstein & Szeliski and mark the article as Read", "kind": "todo", "priority": "high", "done": false },
+        { "text": "What stereo rig will the robot use?", "detail": "Baseline, resolution and frame rate decide which stage-3 methods are feasible in real time.", "kind": "question", "priority": "high", "done": false },
+        { "text": "Which error metric matters for your application?", "detail": "e.g. percentage of bad pixels vs RMS disparity error.", "kind": "question", "priority": "medium", "done": false },
+        { "text": "Find a modern follow-up to see what changed since 2002", "detail": "e.g. semi-global matching or a learned stereo network.", "kind": "todo", "priority": "medium", "done": false },
+        { "text": "Early benchmark scenes are indoor lab setups", "detail": "May not reflect outdoor or low-texture robot environments.", "kind": "risk", "priority": "low", "done": false }
+      ]
+    },
+    {
+      "id": "source-spotlight",
+      "type": "sources",
+      "title": "Source spotlight",
+      "accent": "purple",
+      "items": [
+        {
+          "ref": "9e7d6ff6-e350-437d-ad4a-c2be40efbd9a",
+          "takeaway": "Foundational: defines the 4-stage taxonomy and the Middlebury benchmark every later stereo paper is measured against.",
+          "relevance": 10
+        }
+      ]
+    }
+  ],
+  "changelog": [
+    { "date": "2026-09-12T00:17:00Z", "note": "Board created — seeded from the Scharstein & Szeliski notes in the scratchpad." }
+  ]
+}

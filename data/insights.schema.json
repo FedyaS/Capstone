@@ -1,0 +1,327 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "insights.schema.json",
+  "title": "Capstone Insights board",
+  "description": "AI-managed briefing rendered at /insights. Mirror of src/lib/insights.ts — keep them in sync. Full guide: .cursor/rules/ai-insights.mdc",
+  "type": "object",
+  "required": ["updatedAt", "headline", "blocks"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 UTC timestamp of this edit, e.g. 2026-09-12T14:05:00Z. Shown as 'Updated 3h ago'."
+    },
+    "headline": {
+      "type": "string",
+      "maxLength": 160,
+      "description": "One sentence: the single most important insight right now. Big serif hero text."
+    },
+    "summary": {
+      "type": "string",
+      "maxLength": 600,
+      "description": "2-3 sentences of context under the headline. Plain text."
+    },
+    "focus": {
+      "type": "array",
+      "maxItems": 5,
+      "items": { "type": "string", "maxLength": 40 },
+      "description": "Short chips naming what the research is focused on right now."
+    },
+    "blocks": {
+      "type": "array",
+      "description": "Rendered top to bottom. 'half' blocks pair side by side on desktop.",
+      "items": { "$ref": "#/definitions/block" }
+    },
+    "changelog": {
+      "type": "array",
+      "description": "Newest first. Prepend one entry per edit; keep at most 10.",
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "required": ["date", "note"],
+        "properties": {
+          "date": { "type": "string", "format": "date-time" },
+          "note": { "type": "string", "maxLength": 200 }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "accent": {
+      "type": "string",
+      "enum": ["cyan", "emerald", "amber", "purple", "sky", "rose", "slate"],
+      "description": "Colour of the block. cyan = default/brand, emerald = solid/confirmed, amber = attention, purple = comparison/ideas, sky = reference, rose = risk, slate = neutral."
+    },
+    "level": { "type": "string", "enum": ["high", "medium", "low"] },
+    "sourceRef": {
+      "type": "string",
+      "description": "An article id from data/articles.json, a topic id from data/topics.json, a full https:// URL, \"scratchpad\" or \"problem\"."
+    },
+    "block": {
+      "type": "object",
+      "required": ["id", "type"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "Unique kebab-case id. Keep it stable across edits — it is the anchor link (#id)."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["stats", "takeaways", "pipeline", "compare", "timeline", "bars", "concepts", "callout", "actions", "sources", "markdown"]
+        },
+        "title": { "type": "string", "maxLength": 80 },
+        "subtitle": { "type": "string", "maxLength": 140 },
+        "span": {
+          "type": "string",
+          "enum": ["full", "half"],
+          "default": "full",
+          "description": "full = whole row. half = half row on desktop; place two half blocks next to each other."
+        },
+        "accent": { "$ref": "#/definitions/accent" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "stats" } } },
+          "then": {
+            "description": "Row of 2-4 big-number tiles.",
+            "required": ["items"],
+            "properties": {
+              "items": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 4,
+                "items": {
+                  "type": "object",
+                  "required": ["value", "label"],
+                  "properties": {
+                    "value": { "type": "string", "maxLength": 10, "description": "The big number/word, e.g. \"4\", \"92%\", \"~20 yrs\"." },
+                    "label": { "type": "string", "maxLength": 28 },
+                    "hint": { "type": "string", "maxLength": 60 },
+                    "accent": { "$ref": "#/definitions/accent" }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "takeaways" } } },
+          "then": {
+            "description": "Key insight cards with importance, confidence and sources.",
+            "required": ["items"],
+            "properties": {
+              "items": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 8,
+                "items": {
+                  "type": "object",
+                  "required": ["title", "body", "importance"],
+                  "properties": {
+                    "title": { "type": "string", "maxLength": 70 },
+                    "body": { "type": "string", "maxLength": 400, "description": "Markdown. 1-3 sentences." },
+                    "importance": { "$ref": "#/definitions/level" },
+                    "confidence": { "type": "number", "minimum": 0, "maximum": 100, "description": "How sure the AI is, 0-100." },
+                    "sources": { "type": "array", "items": { "$ref": "#/definitions/sourceRef" } },
+                    "tags": { "type": "array", "items": { "type": "string", "maxLength": 24 } }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "pipeline" } } },
+          "then": {
+            "description": "Numbered process flow. Horizontal on desktop when span is full.",
+            "required": ["steps"],
+            "properties": {
+              "steps": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 6,
+                "items": {
+                  "type": "object",
+                  "required": ["label"],
+                  "properties": {
+                    "label": { "type": "string", "maxLength": 32 },
+                    "detail": { "type": "string", "maxLength": 160 }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "compare" } } },
+          "then": {
+            "description": "Side-by-side comparison table.",
+            "required": ["columns", "rows"],
+            "properties": {
+              "columns": { "type": "array", "minItems": 2, "maxItems": 4, "items": { "type": "string", "maxLength": 32 } },
+              "rows": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": ["label", "values"],
+                  "properties": {
+                    "label": { "type": "string", "maxLength": 32 },
+                    "values": { "type": "array", "items": { "type": "string" }, "description": "Exactly one value per column, in column order." }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "highlight": { "type": "integer", "minimum": 0, "description": "Optional 0-based column index to mark as ★ Recommended." }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "timeline" } } },
+          "then": {
+            "description": "Vertical list of dated events, oldest first.",
+            "required": ["events"],
+            "properties": {
+              "events": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": ["date", "title"],
+                  "properties": {
+                    "date": { "type": "string", "maxLength": 16, "description": "Free text: \"2002\", \"Mar 2026\", \"Week 3\"." },
+                    "title": { "type": "string", "maxLength": 60 },
+                    "detail": { "type": "string", "maxLength": 200 }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "bars" } } },
+          "then": {
+            "description": "Horizontal bar chart, one colour. For ranking/priority/coverage.",
+            "required": ["items"],
+            "properties": {
+              "unit": { "type": "string", "maxLength": 8, "description": "Appended to values, e.g. \"%\" or \"papers\"." },
+              "max": { "type": "number", "minimum": 0, "description": "Full-bar value. Defaults to the largest item. With no unit, values show as value/max." },
+              "items": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 8,
+                "items": {
+                  "type": "object",
+                  "required": ["label", "value"],
+                  "properties": {
+                    "label": { "type": "string", "maxLength": 48 },
+                    "value": { "type": "number", "minimum": 0 },
+                    "note": { "type": "string", "maxLength": 80 }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "concepts" } } },
+          "then": {
+            "description": "Glossary cards: term + definition.",
+            "required": ["items"],
+            "properties": {
+              "items": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": ["term", "definition"],
+                  "properties": {
+                    "term": { "type": "string", "maxLength": 40 },
+                    "definition": { "type": "string", "maxLength": 240, "description": "Markdown; $inline math$ works." }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "callout" } } },
+          "then": {
+            "description": "Highlighted message. The tone sets colour and icon; 'accent' is ignored.",
+            "required": ["body"],
+            "properties": {
+              "tone": { "type": "string", "enum": ["insight", "info", "success", "warning", "danger"], "default": "insight" },
+              "body": { "type": "string", "maxLength": 600, "description": "Markdown." }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "actions" } } },
+          "then": {
+            "description": "Next steps, open questions and risks. Done items sink to the bottom.",
+            "required": ["items"],
+            "properties": {
+              "items": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": ["text", "kind", "priority"],
+                  "properties": {
+                    "text": { "type": "string", "maxLength": 120 },
+                    "detail": { "type": "string", "maxLength": 200 },
+                    "kind": { "type": "string", "enum": ["todo", "question", "risk"] },
+                    "priority": { "$ref": "#/definitions/level" },
+                    "done": { "type": "boolean", "default": false }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "sources" } } },
+          "then": {
+            "description": "Spotlight on the most useful sources, with a one-line takeaway each.",
+            "required": ["items"],
+            "properties": {
+              "items": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": ["ref", "takeaway"],
+                  "properties": {
+                    "ref": { "$ref": "#/definitions/sourceRef" },
+                    "takeaway": { "type": "string", "maxLength": 200 },
+                    "relevance": { "type": "number", "minimum": 0, "maximum": 10 }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "markdown" } } },
+          "then": {
+            "description": "Escape hatch: free-form Markdown + LaTeX. Use only when no other block fits.",
+            "required": ["body"],
+            "properties": { "body": { "type": "string" } }
+          }
+        }
+      ]
+    }
+  }
+}

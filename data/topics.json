@@ -1,5 +1,15 @@
 [
   {
+    "id": "b0c25709-a57d-4501-a0d2-5de975d5d9cc",
+    "name": "Deep Learning for Disparity Maps",
+    "status": "DONT_UNDERSTAND",
+    "usefulness": 7,
+    "tags": [],
+    "notes": "",
+    "createdAt": "2026-09-15T19:50:56.141Z",
+    "updatedAt": "2026-09-15T19:50:56.141Z"
+  },
+  {
     "id": "274d95b2-537b-4aec-9ab1-3f8bb1f619b2",
     "name": "Stereo Vision Algorithm Basics",
     "status": "LEARNING",
